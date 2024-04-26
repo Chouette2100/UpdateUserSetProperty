@@ -25,10 +25,11 @@ import (
 0.0.1 UserでGenreが空白の行のGenreをSHOWROOMのAPIで更新する。
 0.0.2 Userでirankが-1の行のランクが空白の行のランク情報をSHOWROOMのAPIで更新する。
 0.1.0 DBのアクセスにgorpを導入する。
+0.1.1 database/sqlを使った部分（コメント）を削除する
 
 */
 
-const Version = "0.1.0"
+const Version = "0.1.1"
 
 //      "gopkg.in/gorp.v2"
 
