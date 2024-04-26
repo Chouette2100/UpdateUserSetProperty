@@ -65,8 +65,8 @@ func SelectUserWithoutGenre() (
 	err error,
 ) {
 
-	//	rows, err := Dbmap.Select(User{}, "select * where userno = ? ", "164614")
-	//	rows, err := Dbmap.Select(User{}, "select userno, user_name from showroom.user where `rank` = ? ", "A-5")
+	//	rows, err := Dbmap.Select(User{}, "select * from user where userno = ? ", "164614")
+	//	rows, err := Dbmap.Select(User{}, "select * from user where `rank` = ? ", "A-5")
 	rows, err := Dbmap.Select(User{}, "select * from user where userno = ? ", "87911")
 	if err != nil {
 		err = fmt.Errorf("select(): %w", err)
@@ -79,40 +79,6 @@ func SelectUserWithoutGenre() (
 	}
 
 
-	/*
-	//	0.0.1 Genreが空のレコードが検索する
-	//	sqlstmt := "select userno from user where genre = '' limit 3"
-	//	sqlstmt := "select userno from user where genre = '' "
-	//	sqlstmt := "select userno from user where genre = 'unknown' "
-	//	0.0.2 irankが-1でrankが ' SS|SS-?' または ' S|S-? ' のレコードを検索する。
-	//	sqlstmt := "select userno from user where `rank` in ('SS-5', 'SS-4', 'SS-3', 'SS-2', 'SS-1', 'S | S-5') AND inrank = -1; "
-	//	sqlstmt := "select userno from user where irank = -1 order by followers desc limit 10; "
-	sqlstmt := "select userno from user where `rank` = 'A | A-5'; "
-
-	stmt, err := srdblib.Db.Prepare(sqlstmt)
-	if err != nil {
-		err = fmt.Errorf("prepare(): %w", err)
-		return nil, err
-	}
-	defer stmt.Close()
-
-	rows, err := stmt.Query()
-	if err != nil {
-		err = fmt.Errorf("query(): %w", err)
-		return nil, err
-	}
-	defer rows.Close()
-
-	var userno int
-	for rows.Next() {
-		err = rows.Scan(&userno)
-		if err != nil {
-			err = fmt.Errorf("scan: %w", err)
-			return nil, err
-		}
-		userlist = append(userlist, userno)
-	}
-	*/
 	return
 }
 
@@ -211,33 +177,6 @@ func UpdateUserSetRank(client *http.Client, tnow time.Time, user *User) (
         }
         log.Printf("cnt = %d\n", cnt)
 
-	/*
-	//	ユーザーのGenreを更新する
-	sqlstmt := "update user set user_name = ?, genre = ?, `rank` = ?, "
-	sqlstmt += " irank = ?, inrank = ?, iprank = ?, nrank = ?, prank = ?, level = ?, followers = ?  "
-	sqlstmt += " where userno = ?"
-
-	stmt, err := srdblib.Db.Prepare(sqlstmt)
-	if err != nil {
-		err = fmt.Errorf("prepare: %w", err)
-		return err
-	}
-	defer stmt.Close()
-
-	//	genre := srdblib.ConverGenre2Abbr(roominf.Genre)
-	//	_, err = stmt.Exec(genre, userno)
-	_, err = stmt.Exec(
-		ria.RoomName,
-		ria.ShowRankSubdivided,
-		MakeSortKeyOfRank(ria.ShowRankSubdivided, ria.NextScore),
-		ria.NextScore,
-		ria.PrevScore, user.Userno,
-	)
-	if err != nil {
-		err = fmt.Errorf("exec: %w", err)
-		return err
-	}
-	*/
 	
 	log.Printf("userno=%d rank=%s nscore=%d pscore=%d longname=%s\n", user.Userno, ria.ShowRankSubdivided, ria.NextScore, ria.PrevScore, ria.RoomName)
 	return
