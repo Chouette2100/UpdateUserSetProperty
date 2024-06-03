@@ -1,18 +1,26 @@
 ## DBサーバーのホスト名、指定しなければlocalhost
-#DBhost:
-#
-#DBport:
 
+#DBhost:
+#DBport: 
 
 # データベース名
 DBname: ${DBNAME}
-#
-#
+
 # ログイン名とパスワードは環境変数で渡す
 DBuser: ${DBUSER}
 DBpswd: ${DBPW}
 
-# SSH接続を使うか否か
+# SSH接続を使わない
 UseSSH: false
-#UseSSH: true
 
+# 既存のトンネルを利用してSSH接続を使う
+#UseSSH: false
+#DBport: 
+
+# SSH接続を使う
+#UseSSH: true
+#SSHhost: ${SSHHOST}
+#SSHport: ${SSHPORT}
+#SSHuser: ${SSHUSER}
+##SSHprvkey: ${SSHKEY}
+##SSHpswd: ${SSHPSWD}
