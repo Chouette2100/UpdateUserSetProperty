@@ -3,9 +3,9 @@ package main
 import (
 	"flag"
 	"fmt"
-	"io"
+	//	"io"
 	"log"
-	"os"
+	//	"os"
 
 	//	"strings"
 	//	"strconv"
@@ -32,10 +32,17 @@ import (
 00AA00	実行時パラメータの導入等crontabで使用できるように改修する。
 00AB00	実行時パラメータに"user"を追加する。履歴（itrank）の設定方法の誤りを修正する（最大=>最小）
 00AC00	パラメータとその設定を実用的なものにする。
+00AD00	cmd="entry" を追加する（イベントに参加しているルームをすべてSHOWランク取得の対象とできる）
+00AD01	ログ出力先をファイルのみとする。
+00AE00	ランキングはsrapi.GetGenreRankingByApi()を使って取得する（2024年6月はじめの仕様変更への対応）
+00AE01	コマンドライン変数にiscurrentを追加する。
+00AE02	コマンドライン変数にpagesを追加する。
+00AE03	InsertまたはUpdateを行ったときだけウェイトするものとし、またウエイトの単位はmsとする。
+00AE04	"Entry"のソートをeventuser.point（降順）で行う
 
 */
 
-const Version = "00AC00"
+const Version = "00AE04"
 
 //      "gopkg.in/gorp.v2"
 
@@ -52,8 +59,11 @@ func SelectFromUserByCond(
 	srlimit int,
 	evth int,
 	evhhmm int,
+	etlimit int,
 	ptth int,
 	userno int,
+	iscurrent bool,
+	pages int,
 ) (
 	userlist []interface{},
 	err error,
@@ -122,6 +132,10 @@ func SelectFromUserByCond(
 			sqlstmt := "select eu.userno from eventuser eu join event e on ( eu.eventid = e.eventid ) "
 			sqlstmt += " where e.endtime between ? and ? and eu.point > ? order by eu.point desc "
 			userlist, err = srdblib.Dbmap.Select(srdblib.User{}, sqlstmt, tty, tt, evth)
+		case "entry":
+			sqlstmt := "select eu.userno from eventuser eu join event e on eu.eventid = e.eventid "
+			sqlstmt += " where curdate() between e.starttime and e.endtime order by eu.point desc limit ? "
+			userlist, err = srdblib.Dbmap.Select(srdblib.User{}, sqlstmt, etlimit)
 			//	default:
 		}
 		if err != nil {
@@ -134,14 +148,16 @@ func SelectFromUserByCond(
 		switch cmd {
 		case "ranking": //	ranking
 			//	ランキング上位のランクを取得する。
-			var rmrnks *[]srapi.RoomRanking
-			rmrnks, err = srapi.CrawlRoomRanking(prd)
+			genreid := 0
+
+			gr := &[]srapi.GenreRanking{}
+			gr, err = srapi.GetGenreRankingByApi(client, genreid, prd, iscurrent, pages)
 			if err != nil {
-				err = fmt.Errorf("CrawlRoomRanking(): %w", err)
+				err = fmt.Errorf("srapi.GetGenreRankingByApi(): %w", err)
 				return nil, err
 			}
-			for _, v := range *rmrnks {
-				userlist = append(userlist, &srdblib.User{Userno: v.Room_id})
+			for _, v := range *gr {
+				userlist = append(userlist, &srdblib.User{Userno: v.Room.RoomID})
 			}
 		}
 
@@ -172,26 +188,18 @@ func main() {
 	var (
 		cmd     = flag.String("cmd", "showrank", "string flag")
 		spmmhh  = flag.Int("spmmhh", 0, "int flag")
-		wait    = flag.Int("wait", 1, "int flag")
+		wait    = flag.Int("wait", 3000, "int flag")
 		prd     = flag.String("prd", "daily", "string flag")
 		//	srth    = flag.Int("srth", 350600000, "int flag")
 		srlimit    = flag.Int("srlimit", 220, "int flag")
 		evth    = flag.Int("evth", 500000, "int flag")
 		evhhmm    = flag.Int("evhhmm", 1205, "int flag")
+		etlimit    = flag.Int("etlimit", 300, "int flag")
 		ptth = flag.Int("ptth", 100000, "int flag")
 		userno  = flag.Int("userno", 0, "int flag")
+		iscurrent  = flag.Bool("iscurrent", false, "bool flag")
+		pages  = flag.Int("pages", 6, "int flag")
 	)
-	flag.Parse()
-
-	fmt.Printf("param -cmd : %s\n", *cmd)
-	fmt.Printf("param -spmmhh : %d\n", *spmmhh)
-	fmt.Printf("param -wait : %d\n", *wait)
-	fmt.Printf("param -prd : %s\n", *prd)
-	fmt.Printf("param -srlimit : %d\n", *srlimit)
-	fmt.Printf("param -evth : %d\n", *evth)
-	fmt.Printf("param -evhhmm : %d\n", *evhhmm)
-	fmt.Printf("param -ptth : %d\n", *ptth)
-	fmt.Printf("param -userno : %d\n", *userno)
 
 	//	ログ出力を設定する
 	logfile, err := exsrapi.CreateLogfile(Version, srdblib.Version)
@@ -199,8 +207,24 @@ func main() {
 		panic("cannnot open logfile: " + err.Error())
 	}
 	defer logfile.Close()
-	//	log.SetOutput(logfile)
-	log.SetOutput(io.MultiWriter(logfile, os.Stdout))
+	log.SetOutput(logfile)
+	//	log.SetOutput(io.MultiWriter(logfile, os.Stdout))
+
+	flag.Parse()
+
+	log.Printf("param -cmd : %s\n", *cmd)
+	log.Printf("param -spmmhh : %d\n", *spmmhh)
+	log.Printf("param -wait : %d\n", *wait)
+	log.Printf("param -prd : %s\n", *prd)
+	log.Printf("param -srlimit : %d\n", *srlimit)
+	log.Printf("param -evth : %d\n", *evth)
+	log.Printf("param -evhhmm : %d\n", *evhhmm)
+	log.Printf("param -etlimit : %d\n", *etlimit)
+	log.Printf("param -ptth : %d\n", *ptth)
+	log.Printf("param -userno : %d\n", *userno)
+	log.Printf("param -iscurrent : %t\n", *iscurrent)
+	log.Printf("param -pages : %d\n", *pages)
+
 
 	//	データベースとの接続をオープンする。
 	var dbconfig *srdblib.DBConfig
@@ -235,7 +259,7 @@ func main() {
 	defer jar.Save() //	忘れずに！
 
 	// 	条件に一致するユーザを抽出する。
-	userlist, err := SelectFromUserByCond(client, *cmd, *prd, *srlimit, *evth, *evhhmm, *ptth, *userno)
+	userlist, err := SelectFromUserByCond(client, *cmd, *prd, *srlimit, *evth, *evhhmm, *etlimit, *ptth, *userno, *iscurrent, *pages)
 	//	userlist, err := SelectFromUserByCond()
 	if err != nil {
 		err = fmt.Errorf("SelectFromUserByCond(): %w", err)
@@ -260,12 +284,13 @@ func main() {
 		if user.Userno == 0 {
 			continue
 		}
-		err = srdblib.UpinsUserSetProperty(client, tnow, user, pd)
+		err = srdblib.UpinsUserSetProperty(client, tnow, user, pd, *wait)
 		if err != nil {
 			err = fmt.Errorf("UpinsUserSetProperty(): %w", err)
 			log.Printf("%v", err)
 			continue //	エラーの場合は次のレコードへ。
 		}
-		time.Sleep(time.Duration(*wait) * time.Second) //	1秒のスリープを入れる。
+		//	time.Sleep(time.Duration(*wait) * time.Millisecond)
+
 	}
 }
