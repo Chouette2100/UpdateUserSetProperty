@@ -39,10 +39,11 @@ import (
 00AE02	コマンドライン変数にpagesを追加する。
 00AE03	InsertまたはUpdateを行ったときだけウェイトするものとし、またウエイトの単位はmsとする。
 00AE04	"Entry"のソートをeventuser.point（降順）で行う
+00AE05	spmmhhをsphhmmと訂正する。
 
 */
 
-const Version = "00AE04"
+const Version = "00AE05"
 
 //      "gopkg.in/gorp.v2"
 
@@ -122,8 +123,10 @@ func SelectFromUserByCond(
 		case "event": //	event
 			tt := tnow
 			hh, mm, _ := tt.Clock()
+			//	日付を求めるのだが、Truncate()はUTCで切り捨てを行うので09:00JST以前が前日になってしまうことへの対策
 			tt = tt.Add(9 * time.Hour).Truncate(24 * time.Hour).Add(-9 * time.Hour)
 			if hh * 60 + mm < evhhmm / 100 * 60 + evhhmm % 100 {
+				//	evhhmmで指定した時刻より前に実行するときは前々日終了のイベントの結果を対象とする。
 				tt = tt.Add(-24 * time.Hour)
 			}
 
@@ -187,7 +190,7 @@ func main() {
 
 	var (
 		cmd     = flag.String("cmd", "showrank", "string flag")
-		spmmhh  = flag.Int("spmmhh", 0, "int flag")
+		sphhmm  = flag.Int("sphhmm", 0, "int flag")
 		wait    = flag.Int("wait", 3000, "int flag")
 		prd     = flag.String("prd", "daily", "string flag")
 		//	srth    = flag.Int("srth", 350600000, "int flag")
@@ -213,7 +216,7 @@ func main() {
 	flag.Parse()
 
 	log.Printf("param -cmd : %s\n", *cmd)
-	log.Printf("param -spmmhh : %d\n", *spmmhh)
+	log.Printf("param -sphhmm : %d\n", *sphhmm)
 	log.Printf("param -wait : %d\n", *wait)
 	log.Printf("param -prd : %s\n", *prd)
 	log.Printf("param -srlimit : %d\n", *srlimit)
@@ -271,7 +274,7 @@ func main() {
 
 	// 該当するレコードのGenreに値を設定する
 	tnow := time.Now().Truncate(time.Second)
-	sp := (*spmmhh/100)*60 + (*spmmhh % 100)
+	sp := (*sphhmm/100)*60 + (*sphhmm % 100)
 	hh, mm, _ := tnow.Clock()
 	tn := hh*60 + mm
 	if sp > tn {

@@ -22,19 +22,24 @@
 # 指定したルームIDのルームのデータを取得する
 # Us ルームID
 
-# 指定したルームIDのルームのデータを取得する
-# Rk 期間（daily, weekly, monthly, annually, all_time） 現在/前期間（current/last） ページ数（ページ数*20がデータ数）(5〜20 期間によって調整)
+# 指定した期間のランキングを取得する
+# Rk 期間（daily, weekly, monthly, annually, all_time） 現在/前期間（current/last） ページ数
+#	ページ数*20がデータ数(5〜20 期間によって調整)
+# Ex.	./run.sh Rk daily last 5
+#	./run.sh Rk weekly last 10
+#	./run.sh Rk monthly last 15
 
 cd /home/chouette/MyProject/Showroom/UpdateUserSetProperty
 
-export DBNAME=xxxxxxxxxx
-export DBUSER=xxxxxxxxxx
-export DBPW=xxxxxxxxxx
+export DBNAME=----------
+export DBUSER=----------
+export DBPW=----------
 
 
 # 最初のコマンドで更新されたデータは2番目以降のコマンドでは更新されないようにするため処理の最初にHHMMを設定する
 # 現在のデータのタイムスタンプがこの時刻以後のものは更新と対象としない
 # 処理をまたがって後続のコマンドでは更新されないようにするには外部でHHMMを定義しておく。
+# export HHMM=1330
 if [ -z $HHMM ]; then
     DATE=`date '+%H%M'`
     HHMM=$DATE
@@ -62,30 +67,30 @@ while [ "$#" -gt 0 ]; do
 	echo $dt ${1} >> UUSP.err
   case $1 in
   Sr )
-    ./$LM -cmd showrank -srlimit $2 -spmmhh $HHMM -wait $WT >> UUSP.log 2>> UUSP.err
+    ./$LM -cmd showrank -srlimit $2 -sphhmm $HHMM -wait $WT >> UUSP.log 2>> UUSP.err
     shift
     ;;
   Et )
-    ./$LM -cmd entry -etlimit $2 -spmmhh $HHMM -wait $WT >> UUSP.log 2>> UUSP.err
+    ./$LM -cmd entry -etlimit $2 -sphhmm $HHMM -wait $WT >> UUSP.log 2>> UUSP.err
     shift
     ;;
   Ev )
-    ./$LM -cmd event -evth $2 -evhhmm 1205 -spmmhh $HHMM -wait $WT >> UUSP.log 2>> UUSP.err
+    ./$LM -cmd event -evth $2 -evhhmm 1205 -sphhmm $HHMM -wait $WT >> UUSP.log 2>> UUSP.err
     shift
     ;;
   Pt )
-    ./$LM -cmd point -ptth $2 -spmmhh $HHMM -wait $WT >> UUSP.log 2>> UUSP.err
+    ./$LM -cmd point -ptth $2 -sphhmm $HHMM -wait $WT >> UUSP.log 2>> UUSP.err
     shift
     ;;
   Us )
-    ./$LM -cmd user -userno $2 -spmmhh $HHMM -wait $WT >> UUSP.log 2>> UUSP.err
+    ./$LM -cmd user -userno $2 -sphhmm $HHMM -wait $WT >> UUSP.log 2>> UUSP.err
     shift
     ;;
   Rk )
     if [ $3 = "current"  ]; then
-    ./$LM -cmd ranking -prd $2 -pages $4 -iscurrent true -spmmhh $HHMM -wait $WT >> UUSP.log 2>> UUSP.err
+    ./$LM -cmd ranking -prd $2 -pages $4 -iscurrent true -sphhmm $HHMM -wait $WT >> UUSP.log 2>> UUSP.err
     elif [ $3 = "last" ]; then
-    ./$LM -cmd ranking -prd $2 -pages $4 -spmmhh $HHMM -wait $WT >> UUSP.log 2>> UUSP.err
+    ./$LM -cmd ranking -prd $2 -pages $4 -sphhmm $HHMM -wait $WT >> UUSP.log 2>> UUSP.err
     else
 	    echo unknown parameter $3 - must be current or last >> UUSP.log
     fi
