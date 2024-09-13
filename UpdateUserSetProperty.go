@@ -40,10 +40,11 @@ import (
 00AE03	InsertまたはUpdateを行ったときだけウェイトするものとし、またウエイトの単位はmsとする。
 00AE04	"Entry"のソートをeventuser.point（降順）で行う
 00AE05	spmmhhをsphhmmと訂正する。
+00AF00	srdblib.Dbmap.AddTableWithName(srdblib.Userhistory{}, "userhistory").SetKeys(false, "Userno", "Ts")を追加する
 
 */
 
-const Version = "00AE05"
+const Version = "00AF00"
 
 //      "gopkg.in/gorp.v2"
 
@@ -250,6 +251,7 @@ func main() {
 	srdblib.Dbmap = &gorp.DbMap{Db: srdblib.Db, Dialect: dial, ExpandSliceArgs: true}
 
 	srdblib.Dbmap.AddTableWithName(srdblib.User{}, "user").SetKeys(false, "Userno")
+	srdblib.Dbmap.AddTableWithName(srdblib.Userhistory{}, "userhistory").SetKeys(false, "Userno", "Ts")
 
 	//      cookiejarがセットされたHTTPクライアントを作る
 	client, jar, err := exsrapi.CreateNewClient("anonymous")
