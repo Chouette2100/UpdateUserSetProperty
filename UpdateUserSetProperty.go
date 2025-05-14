@@ -41,10 +41,11 @@ import (
 00AE04	"Entry"のソートをeventuser.point（降順）で行う
 00AE05	spmmhhをsphhmmと訂正する。
 00AF00	srdblib.Dbmap.AddTableWithName(srdblib.Userhistory{}, "userhistory").SetKeys(false, "Userno", "Ts")を追加する
+00AG00	V2.0.0環境で再ビルド
 
 */
 
-const Version = "00AF00"
+const Version = "00AG00"
 
 //      "gopkg.in/gorp.v2"
 
