@@ -31,10 +31,7 @@
 
 cd /home/chouette/MyProject/Showroom/UpdateUserSetProperty
 
-export DBNAME=----------
-export DBUSER=----------
-export DBPW=----------
-
+source ./my_script.env
 
 # 最初のコマンドで更新されたデータは2番目以降のコマンドでは更新されないようにするため処理の最初にHHMMを設定する
 # 現在のデータのタイムスタンプがこの時刻以後のものは更新と対象としない

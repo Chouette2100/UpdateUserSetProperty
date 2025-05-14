@@ -127,7 +127,7 @@ func SelectFromUserByCond(
 			hh, mm, _ := tt.Clock()
 			//	日付を求めるのだが、Truncate()はUTCで切り捨てを行うので09:00JST以前が前日になってしまうことへの対策
 			tt = tt.Add(9 * time.Hour).Truncate(24 * time.Hour).Add(-9 * time.Hour)
-			if hh * 60 + mm < evhhmm / 100 * 60 + evhhmm % 100 {
+			if hh*60+mm < evhhmm/100*60+evhhmm%100 {
 				//	evhhmmで指定した時刻より前に実行するときは前々日終了のイベントの結果を対象とする。
 				tt = tt.Add(-24 * time.Hour)
 			}
@@ -191,19 +191,19 @@ func SelectFromUserByCond(
 func main() {
 
 	var (
-		cmd     = flag.String("cmd", "showrank", "string flag")
-		sphhmm  = flag.Int("sphhmm", 0, "int flag")
-		wait    = flag.Int("wait", 3000, "int flag")
-		prd     = flag.String("prd", "daily", "string flag")
+		cmd    = flag.String("cmd", "showrank", "string flag")
+		sphhmm = flag.Int("sphhmm", 0, "int flag")
+		wait   = flag.Int("wait", 3000, "int flag")
+		prd    = flag.String("prd", "daily", "string flag")
 		//	srth    = flag.Int("srth", 350600000, "int flag")
-		srlimit    = flag.Int("srlimit", 220, "int flag")
-		evth    = flag.Int("evth", 500000, "int flag")
+		srlimit   = flag.Int("srlimit", 220, "int flag")
+		evth      = flag.Int("evth", 500000, "int flag")
 		evhhmm    = flag.Int("evhhmm", 1205, "int flag")
-		etlimit    = flag.Int("etlimit", 300, "int flag")
-		ptth = flag.Int("ptth", 100000, "int flag")
-		userno  = flag.Int("userno", 0, "int flag")
-		iscurrent  = flag.Bool("iscurrent", false, "bool flag")
-		pages  = flag.Int("pages", 6, "int flag")
+		etlimit   = flag.Int("etlimit", 300, "int flag")
+		ptth      = flag.Int("ptth", 100000, "int flag")
+		userno    = flag.Int("userno", 0, "int flag")
+		iscurrent = flag.Bool("iscurrent", false, "bool flag")
+		pages     = flag.Int("pages", 6, "int flag")
 	)
 
 	//	ログ出力を設定する
@@ -229,7 +229,6 @@ func main() {
 	log.Printf("param -userno : %d\n", *userno)
 	log.Printf("param -iscurrent : %t\n", *iscurrent)
 	log.Printf("param -pages : %d\n", *pages)
-
 
 	//	データベースとの接続をオープンする。
 	var dbconfig *srdblib.DBConfig
