@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+
 	//	"io"
 	"log"
 	//	"os"
@@ -18,9 +19,9 @@ import (
 
 	//	"github.com/dustin/go-humanize"
 
-	"github.com/Chouette2100/exsrapi"
-	"github.com/Chouette2100/srapi"
-	"github.com/Chouette2100/srdblib"
+	"github.com/Chouette2100/exsrapi/v2"
+	"github.com/Chouette2100/srapi/v2"
+	"github.com/Chouette2100/srdblib/v2"
 )
 
 /*
@@ -42,10 +43,13 @@ import (
 00AE05	spmmhhをsphhmmと訂正する。
 00AF00	srdblib.Dbmap.AddTableWithName(srdblib.Userhistory{}, "userhistory").SetKeys(false, "Userno", "Ts")を追加する
 00AG00	V2.0.0環境で再ビルド
+00AH01  srdblib/v2.3.5を導入する。
+00AH02  select * をやめてカラムを明記する。
+200100  go.modを作り直す
 
 */
 
-const Version = "00AG00"
+const Version = "200100"
 
 //      "gopkg.in/gorp.v2"
 
@@ -79,15 +83,6 @@ func SelectFromUserByCond(
 		//	単純な select文でsql実行後にエラー処理を行うケース
 		switch cmd {
 		case "user": //	usernoで指定したルームを対象とする。
-			/*
-				//	sqlst = "select * from user where inrank = 100000 limit 100 "
-				sqlst = "select * from user where userno = ? "
-				userlist, err = srdblib.Dbmap.Select(srdblib.User{}, sqlst, userno)
-				if err != nil {
-					err = fmt.Errorf("select(): %w", err)
-					return nil, err
-				}
-			*/
 			var user interface{}
 			user, err = srdblib.Dbmap.Get(&srdblib.User{}, userno)
 			if err != nil {
@@ -101,14 +96,14 @@ func SelectFromUserByCond(
 
 		case "showrank": //	showrank
 			//	上位ルームに対してデータの再取得を行う
-			sqlst = "select * from user where getp is not null and irank > 0 order by irank limit ? "
+			sqlst = "select " + clmlist["user"] + " from user where getp is not null and irank > 0 order by irank limit ? "
 			userlist, err = srdblib.Dbmap.Select(srdblib.User{}, sqlst, srlimit)
 			if err != nil {
 				err = fmt.Errorf("select(): %w", err)
 				return nil, err
 			}
 		case "chkoldtype": //	chkoldtype
-			sqlst = "select * from user where `rank` in "
+			sqlst = "select " + clmlist["user"] + " from user where `rank` in "
 			sqlst += "('SS | SS-5', 'SS | SS-4', 'SS | SS-3', 'SS | SS-2', 'SS | SS-1', "
 			sqlst += "'S | S-5', 'S | S-4', 'S | S-3', 'S | S-2', 'S | S-1', "
 			sqlst += "'A | A-5', 'A | A-4', 'A | A-3', 'A | A-2', 'A | A-1', "
@@ -188,6 +183,12 @@ func SelectFromUserByCond(
 	return
 }
 
+var clmlist map[string]string = map[string]string{}
+
+func init() {
+	clmlist["user"] = srdblib.ExtractStructColumns(&srdblib.User{})
+}
+
 func main() {
 
 	var (
@@ -251,6 +252,7 @@ func main() {
 	srdblib.Dbmap = &gorp.DbMap{Db: srdblib.Db, Dialect: dial, ExpandSliceArgs: true}
 
 	srdblib.Dbmap.AddTableWithName(srdblib.User{}, "user").SetKeys(false, "Userno")
+	srdblib.Dbmap.AddTableWithName(srdblib.Wuser{}, "wuser").SetKeys(false, "Userno")
 	srdblib.Dbmap.AddTableWithName(srdblib.Userhistory{}, "userhistory").SetKeys(false, "Userno", "Ts")
 
 	//      cookiejarがセットされたHTTPクライアントを作る
@@ -284,14 +286,18 @@ func main() {
 	}
 	pd := tn - sp + 5
 
+	srdblib.Env.Lmin = pd
+	srdblib.Env.Waitmsec = *wait
+
 	for _, v := range userlist {
 		user := v.(*srdblib.User)
 		if user.Userno == 0 {
 			continue
 		}
-		err = srdblib.UpinsUserSetProperty(client, tnow, user, pd, *wait)
+		// err = srdblib.UpinsUserSetProperty(client, tnow, user, pd, *wait)
+		_, err = srdblib.UpinsUser(client, tnow, user)
 		if err != nil {
-			err = fmt.Errorf("UpinsUserSetProperty(): %w", err)
+			err = fmt.Errorf("UpinsUser(): %w", err)
 			log.Printf("%v", err)
 			continue //	エラーの場合は次のレコードへ。
 		}
