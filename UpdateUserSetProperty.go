@@ -14,6 +14,9 @@ import (
 
 	"net/http"
 
+	"database/sql"
+	_ "github.com/go-sql-driver/mysql"
+
 	"github.com/go-gorp/gorp"
 	//      "gopkg.in/gorp.v2"
 
@@ -21,7 +24,8 @@ import (
 
 	"github.com/Chouette2100/exsrapi/v2"
 	"github.com/Chouette2100/srapi/v2"
-	"github.com/Chouette2100/srdblib/v2"
+	// "github.com/Chouette2100/srdblib/v2"
+	"github.com/Chouette2100/srdblib/v3"
 )
 
 /*
@@ -46,10 +50,17 @@ import (
 00AH01  srdblib/v2.3.5を導入する。
 00AH02  select * をやめてカラムを明記する。
 200100  go.modを作り直す
+200200  srdblib/v3を導入する。
 
 */
 
-const Version = "200100"
+const Version = "200200"
+
+var Db0 *sql.DB
+var Dbmap0 *gorp.DbMap
+
+// var Db1 *sql.DB
+// var Dbmap1 *gorp.DbMap
 
 //      "gopkg.in/gorp.v2"
 
@@ -84,7 +95,7 @@ func SelectFromUserByCond(
 		switch cmd {
 		case "user": //	usernoで指定したルームを対象とする。
 			var user interface{}
-			user, err = srdblib.Dbmap.Get(&srdblib.User{}, userno)
+			user, err = Dbmap0.Get(&srdblib.User{}, userno)
 			if err != nil {
 				err = fmt.Errorf("srdblib.Dbmap.Get(): %w", err)
 			} else {
@@ -97,7 +108,7 @@ func SelectFromUserByCond(
 		case "showrank": //	showrank
 			//	上位ルームに対してデータの再取得を行う
 			sqlst = "select " + clmlist["user"] + " from user where getp is not null and irank > 0 order by irank limit ? "
-			userlist, err = srdblib.Dbmap.Select(srdblib.User{}, sqlst, srlimit)
+			userlist, err = Dbmap0.Select(srdblib.User{}, sqlst, srlimit)
 			if err != nil {
 				err = fmt.Errorf("select(): %w", err)
 				return nil, err
@@ -108,7 +119,7 @@ func SelectFromUserByCond(
 			sqlst += "'S | S-5', 'S | S-4', 'S | S-3', 'S | S-2', 'S | S-1', "
 			sqlst += "'A | A-5', 'A | A-4', 'A | A-3', 'A | A-2', 'A | A-1', "
 			sqlst += "'B | B-5') "
-			userlist, err = srdblib.Dbmap.Select(srdblib.User{}, sqlst)
+			userlist, err = Dbmap0.Select(srdblib.User{}, sqlst)
 		case "point": //	point
 			//	直近の獲得ポイント上位のルームのランクを再取得する。
 			//	tnow := time.Now()
@@ -116,7 +127,7 @@ func SelectFromUserByCond(
 			btime := etime.Add(-5 * time.Minute)
 			sqlst = "select user_id as userno from points where ts between ? and ? and point > ? "
 			sqlst += " order by point desc"
-			userlist, err = srdblib.Dbmap.Select(srdblib.User{}, sqlst, btime, etime, ptth)
+			userlist, err = Dbmap0.Select(srdblib.User{}, sqlst, btime, etime, ptth)
 		case "event": //	event
 			tt := tnow
 			hh, mm, _ := tt.Clock()
@@ -131,11 +142,11 @@ func SelectFromUserByCond(
 
 			sqlstmt := "select eu.userno from eventuser eu join event e on ( eu.eventid = e.eventid ) "
 			sqlstmt += " where e.endtime between ? and ? and eu.point > ? order by eu.point desc "
-			userlist, err = srdblib.Dbmap.Select(srdblib.User{}, sqlstmt, tty, tt, evth)
+			userlist, err = Dbmap0.Select(srdblib.User{}, sqlstmt, tty, tt, evth)
 		case "entry":
 			sqlstmt := "select eu.userno from eventuser eu join event e on eu.eventid = e.eventid "
 			sqlstmt += " where curdate() between e.starttime and e.endtime order by eu.point desc limit ? "
-			userlist, err = srdblib.Dbmap.Select(srdblib.User{}, sqlstmt, etlimit)
+			userlist, err = Dbmap0.Select(srdblib.User{}, sqlstmt, etlimit)
 			//	default:
 		}
 		if err != nil {
@@ -233,7 +244,7 @@ func main() {
 
 	//	データベースとの接続をオープンする。
 	var dbconfig *srdblib.DBConfig
-	dbconfig, err = srdblib.OpenDb("DBConfig.yml")
+	Db0, dbconfig, err = srdblib.OpenDb("DBConfig.yml")
 	if err != nil {
 		err = fmt.Errorf("srdblib.OpenDb() returned error. %w", err)
 		log.Printf("%s\n", err.Error())
@@ -242,18 +253,18 @@ func main() {
 	if dbconfig.UseSSH {
 		defer srdblib.Dialer.Close()
 	}
-	defer srdblib.Db.Close()
+	defer Db0.Close()
 
 	log.Printf("********** Dbhost=<%s> Dbname = <%s> Dbuser = <%s> Dbpw = <%s>\n",
 		(*dbconfig).DBhost, (*dbconfig).DBname, (*dbconfig).DBuser, (*dbconfig).DBpswd)
 
 	//	gorpの初期設定を行う
 	dial := gorp.MySQLDialect{Engine: "InnoDB", Encoding: "utf8mb4"}
-	srdblib.Dbmap = &gorp.DbMap{Db: srdblib.Db, Dialect: dial, ExpandSliceArgs: true}
+	Dbmap0 = &gorp.DbMap{Db: Db0, Dialect: dial, ExpandSliceArgs: true}
 
-	srdblib.Dbmap.AddTableWithName(srdblib.User{}, "user").SetKeys(false, "Userno")
-	srdblib.Dbmap.AddTableWithName(srdblib.Wuser{}, "wuser").SetKeys(false, "Userno")
-	srdblib.Dbmap.AddTableWithName(srdblib.Userhistory{}, "userhistory").SetKeys(false, "Userno", "Ts")
+	Dbmap0.AddTableWithName(srdblib.User{}, "user").SetKeys(false, "Userno")
+	Dbmap0.AddTableWithName(srdblib.Wuser{}, "wuser").SetKeys(false, "Userno")
+	Dbmap0.AddTableWithName(srdblib.Userhistory{}, "userhistory").SetKeys(false, "Userno", "Ts")
 
 	//      cookiejarがセットされたHTTPクライアントを作る
 	client, jar, err := exsrapi.CreateNewClient("anonymous")
@@ -295,7 +306,7 @@ func main() {
 			continue
 		}
 		// err = srdblib.UpinsUserSetProperty(client, tnow, user, pd, *wait)
-		_, err = srdblib.UpinsUser(client, tnow, user)
+		_, err = srdblib.UpinsUser(Dbmap0, client, tnow, user)
 		if err != nil {
 			err = fmt.Errorf("UpinsUser(): %w", err)
 			log.Printf("%v", err)
