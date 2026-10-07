@@ -1,4 +1,4 @@
-#! /bin/bash
+#! /bin/sh
 
 # 起動方法
 #
@@ -29,9 +29,14 @@
 #	./run.sh Rk weekly last 10
 #	./run.sh Rk monthly last 15
 
-cd /home/chouette/MyProject/Showroom/UpdateUserSetProperty
+# export SOPS_AGE_KEY_FILE=/home/chouette/.config/age/key2.txt
+# export DBHOST=127.0.0.1
+# export DBPORT=9901
+# export WORKDR=/var/lib/sruusp
 
-source ./my_script.env
+cd ${WORKDR}
+
+# source ./my_script.env
 
 # 最初のコマンドで更新されたデータは2番目以降のコマンドでは更新されないようにするため処理の最初にHHMMを設定する
 # 現在のデータのタイムスタンプがこの時刻以後のものは更新と対象としない

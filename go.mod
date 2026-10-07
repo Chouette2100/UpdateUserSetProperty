@@ -1,20 +1,18 @@
 module UpdateUserSetProperty
 
-go 1.26.1
-
-replace github.com/Chouette2100/srdblib/v3 => github.com/Chouette2100/srdblib/v3 v3.1.0
+go 1.26.7
 
 require (
-	github.com/Chouette2100/exsrapi/v2 v2.3.4
-	github.com/Chouette2100/srapi/v2 v2.4.0
-	github.com/Chouette2100/srdblib/v3 v3.1.0
+	github.com/Chouette2100/exsrapi/v2 v2.4.0
+	github.com/Chouette2100/srapi/v2 v2.8.1
+	github.com/Chouette2100/srdblib/v3 v3.4.0
 	github.com/go-gorp/gorp v2.2.0+incompatible
-	github.com/go-sql-driver/mysql v1.9.3
+	github.com/go-sql-driver/mysql v1.10.1
 )
 
 require (
 	filippo.io/edwards25519 v1.2.0 // indirect
-	github.com/PuerkitoBio/goquery v1.11.0 // indirect
+	github.com/PuerkitoBio/goquery v1.12.0 // indirect
 	github.com/andybalholm/cascadia v1.3.3 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/dustin/go-humanize v1.0.1 // indirect
@@ -26,9 +24,8 @@ require (
 	github.com/juju/persistent-cookiejar v1.0.0 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	golang.org/x/crypto v0.49.0 // indirect
-	golang.org/x/net v0.51.0 // indirect
+	golang.org/x/net v0.52.0 // indirect
 	golang.org/x/sys v0.42.0 // indirect
-	golang.org/x/term v0.41.0 // indirect
 	gopkg.in/errgo.v1 v1.0.1 // indirect
 	gopkg.in/retry.v1 v1.0.3 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect

@@ -51,10 +51,11 @@ import (
 00AH02  select * をやめてカラムを明記する。
 200100  go.modを作り直す
 200200  srdblib/v3を導入する。
+200300  認証情報のsops/age対応を行う
 
 */
 
-const Version = "200200"
+const Version = "200300"
 
 var Db0 *sql.DB
 var Dbmap0 *gorp.DbMap
@@ -244,7 +245,7 @@ func main() {
 
 	//	データベースとの接続をオープンする。
 	var dbconfig *srdblib.DBConfig
-	Db0, dbconfig, err = srdblib.OpenDb("DBConfig.yml")
+	Db0, dbconfig, err = srdblib.OpenDb("DBConfig.enc.yml")
 	if err != nil {
 		err = fmt.Errorf("srdblib.OpenDb() returned error. %w", err)
 		log.Printf("%s\n", err.Error())
